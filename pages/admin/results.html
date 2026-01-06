@@ -17,29 +17,40 @@
         <header id="header-container"></header>
 
         <main class="flex-1 p-6 ml-0 md:ml-64 transition-all">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Kết quả làm bài</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Kết quả học viên</h2>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="search-input" onkeyup="filterResults()" class="w-full border rounded-lg pl-10 pr-4 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tìm theo tên học viên hoặc tên bài thi...">
+                </div>
+            </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
-                            <th class="px-6 py-3">Học viên</th>
-                            <th class="px-6 py-3">Bài thi</th>
-                            <th class="px-6 py-3">Điểm số</th>
-                            <th class="px-6 py-3">Số câu đúng</th>
-                            <th class="px-6 py-3">Ngày nộp</th>
-                        </tr>
-                    </thead>
-                    <tbody id="results-body">
-                        <tr><td colspan="5" class="text-center py-8">Đang tải dữ liệu...</td></tr>
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                                <th class="px-6 py-3">Học viên</th>
+                                <th class="px-6 py-3">Bài thi</th>
+                                <th class="px-6 py-3">Điểm số</th>
+                                <th class="px-6 py-3">Kết quả</th>
+                                <th class="px-6 py-3">Thời gian nộp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            <tr><td colspan="5" class="text-center py-8 text-gray-400">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
 
     <script src="../../assets/js/common.js"></script>
     <script type="module" src="../../assets/js/admin-results.js"></script>
-    <script>initLayout();</script>
+    <script>
+        initLayout();
+    </script>
 </body>
 </html>
