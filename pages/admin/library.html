@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thư viện Đề thi - EduManager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-50">
+
+    <aside id="sidebar-container"></aside>
+
+    <div class="flex flex-col min-h-screen">
+        <header id="header-container"></header>
+
+        <main class="flex-1 p-6 ml-0 md:ml-64 transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Thư viện Đề thi</h2>
+                <a href="create-exam.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow transition">
+                    <i class="fa-solid fa-plus mr-2"></i> Tạo đề mới
+                </a>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex gap-4">
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="search-input" onkeyup="filterExams()" class="w-full border rounded-lg pl-10 pr-4 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Tìm kiếm tên đề...">
+                </div>
+                <select id="filter-category" onchange="filterExams()" class="border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="">Tất cả loại</option>
+                    <option value="IELTS Reading">IELTS Reading</option>
+                    <option value="TOEIC Listening">TOEIC Listening</option>
+                    <option value="Grammar">Grammar</option>
+                </select>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                            <th class="px-6 py-3">Tên đề thi</th>
+                            <th class="px-6 py-3">Phân loại</th>
+                            <th class="px-6 py-3">Thời gian</th>
+                            <th class="px-6 py-3">Ngày tạo</th>
+                            <th class="px-6 py-3 text-right">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="library-list-body">
+                        <tr><td colspan="5" class="text-center py-8">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/common.js"></script>
+    <script type="module" src="../../assets/js/admin-library.js"></script> <script>initLayout();</script>
+</body>
+</html>
