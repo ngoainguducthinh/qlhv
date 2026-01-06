@@ -7,56 +7,69 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        /* Scrollbar mảnh đẹp hơn */
-        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Hiệu ứng khi chọn đáp án */
-        input[type="radio"]:checked + span { color: #2563eb; font-weight: 700; }
-    </style>
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 flex flex-col h-screen overflow-hidden">
 
-    <header class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 h-auto">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="dashboard.html" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-arrow-left"></i></a>
-                <div>
-                    <h1 id="exam-title" class="font-bold text-gray-800 text-lg truncate max-w-[200px] sm:max-w-md">Đang tải đề thi...</h1>
-                    <p class="text-xs text-gray-500 hidden sm:block">Học viên: <span id="student-name">...</span></p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg border border-red-100 shadow-sm">
-                    <i class="fa-regular fa-clock fa-spin-pulse"></i>
-                    <span id="countdown" class="font-mono font-bold text-xl">00:00</span>
-                </div>
-                
-                <button onclick="submitExam()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-blue-200 transition">
-                    Nộp Bài
-                </button>
-            </div>
+    <header class="bg-white border-b h-16 flex items-center justify-between px-6 z-20 shrink-0 shadow-sm">
+        <div class="flex items-center gap-4">
+            <a href="dashboard.html" class="text-gray-500 hover:text-blue-600"><i class="fa-solid fa-chevron-left"></i> Thoát</a>
+            <h1 id="exam-title" class="text-lg font-bold text-gray-800 border-l pl-4 truncate max-w-md">Đang tải đề...</h1>
         </div>
-
-        <div class="bg-gray-50 border-t border-gray-200 py-2">
-            <div class="max-w-7xl mx-auto px-4">
-                <div id="question-tracker" class="flex gap-2 overflow-x-auto custom-scroll pb-1">
-                    </div>
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                <i class="fa-regular fa-clock text-blue-600 animate-pulse"></i>
+                <span id="countdown" class="font-mono font-bold text-blue-700 text-xl">00:00</span>
             </div>
+            <button onclick="submitExam()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-lg shadow-blue-200 transition">
+                Nộp bài
+            </button>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 pt-36 pb-20" id="exam-content">
-        <div class="text-center py-20">
-            <i class="fa-solid fa-circle-notch fa-spin text-blue-500 text-3xl"></i>
-            <p class="mt-4 text-gray-500">Đang chuẩn bị đề thi...</p>
-        </div>
-    </main>
+    <div class="flex flex-1 overflow-hidden">
+        
+        <aside class="w-72 bg-white border-r flex flex-col shrink-0 z-10 hidden md:flex">
+            <div class="p-4 bg-gray-50 border-b">
+                <p class="text-xs font-bold text-gray-500 uppercase">Tiến độ làm bài</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <div class="h-2 flex-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-green-500 w-0 transition-all duration-500"></div>
+                    </div>
+                    <span id="progress-text" class="text-xs font-bold text-gray-600">0%</span>
+                </div>
+            </div>
+            <div id="question-tracker" class="flex-1 overflow-y-auto p-4 grid grid-cols-5 gap-2 content-start">
+                </div>
+            <div class="p-4 border-t text-xs text-gray-400 text-center">
+                EduManager Testing System
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-8 scroll-smooth" id="main-scroll">
+            <div class="max-w-5xl mx-auto pb-20">
+                
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex justify-between items-center">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Thí sinh</p>
+                        <p id="student-name" class="font-bold text-gray-800">...</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500 uppercase">Mã đề</p>
+                        <p id="exam-id-display" class="font-mono font-bold text-gray-600 text-sm">...</p>
+                    </div>
+                </div>
+
+                <div id="exam-content" class="space-y-8">
+                    <div class="text-center py-12">
+                        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
+                        <p class="text-gray-500">Đang tải dữ liệu đề thi...</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
 
     <script type="module" src="../../assets/js/exam-taker.js"></script>
 </body>
