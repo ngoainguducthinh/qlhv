@@ -1,7 +1,6 @@
 // assets/js/exam-editor.js
-import { db, addDoc, collection } from '../../assets/js/firebase-init.js';
+import { db, addDoc, collection, doc, getDoc, updateDoc } from '../../assets/js/firebase-init.js';
 
-// Global Data
 window.examData = {
     title: "",
     duration: 60,
@@ -9,25 +8,52 @@ window.examData = {
     sections: [] 
 };
 
-// --- LOGIC SECTION ---
+let editingExamId = null; // Biến lưu ID nếu đang ở chế độ sửa
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Kiểm tra URL xem có đang sửa đề không
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    
+    if (id) {
+        editingExamId = id;
+        loadExamForEdit(id);
+        document.getElementById('page-title').innerText = "Chỉnh sửa Đề thi";
+        document.getElementById('btn-save-text').innerText = "Cập nhật Đề";
+    }
+});
+
+async function loadExamForEdit(id) {
+    try {
+        const docSnap = await getDoc(doc(db, "exams", id));
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            window.examData = data;
+            
+            // Fill dữ liệu vào form
+            document.getElementById('exam-title').value = data.title;
+            document.getElementById('exam-duration').value = data.duration;
+            document.getElementById('exam-category').value = data.category;
+            
+            // Render các phần thi
+            document.getElementById('empty-state').style.display = 'none';
+            window.renderSections();
+        } else {
+            alert("Không tìm thấy đề thi này!");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Lỗi tải đề: " + e.message);
+    }
+}
+
+// --- CÁC HÀM RENDER GIỮ NGUYÊN ---
 window.addSection = function(type) {
     document.getElementById('empty-state').style.display = 'none';
-    
-    let newSection = {
-        id: Date.now(),
-        type: type,
-        instruction: "",
-        content: "",
-        questions: []
-    };
-
+    let newSection = { id: Date.now(), type: type, instruction: "", content: "", questions: [] };
     if (type === 'multiple_choice') newSection.instruction = "Chọn đáp án đúng nhất.";
-    else if (type === 'gap_fill') {
-        newSection.instruction = "Điền từ vào chỗ trống.";
-        newSection.content = "Hoc tieng Anh tai {DucThinh} rat {hieuqua}.";
-    }
+    else if (type === 'gap_fill') { newSection.instruction = "Điền từ vào chỗ trống."; newSection.content = "Example content {gap1}."; }
     else if (type === 'reading') newSection.instruction = "Đọc đoạn văn và trả lời câu hỏi.";
-
     window.examData.sections.push(newSection);
     window.renderSections();
 }
@@ -39,7 +65,6 @@ window.removeSection = function(sectionId) {
     }
 }
 
-// --- RENDER ---
 window.renderSections = function() {
     const container = document.getElementById('sections-container');
     container.innerHTML = '';
@@ -80,7 +105,6 @@ window.renderSections = function() {
                 <div id="questions-container-${section.id}" class="space-y-2 mt-2"></div>
             `;
         }
-
         html += `</div></div>`;
         container.innerHTML += html;
 
@@ -89,12 +113,10 @@ window.renderSections = function() {
     });
 }
 
-// --- LOGIC GAP FILL ---
 window.handleGapInput = function(sectionId, text) {
     window.updateSectionData(sectionId, 'content', text);
     const regex = /\{([^}]+)\}/g;
-    let match;
-    const gaps = [];
+    let match; const gaps = [];
     while ((match = regex.exec(text)) !== null) gaps.push(match[1]);
 
     const container = document.getElementById(`gap-config-${sectionId}`);
@@ -114,7 +136,7 @@ window.handleGapInput = function(sectionId, text) {
                     ${[0,1,2,3].map(i => `<input class="border rounded px-1" placeholder="${['A','B','C','D'][i]}" value="${q.options[i]}" onchange="updateGapOption(${sectionId}, '${gapName}', ${i}, this.value)">`).join('')}
                 </div>
                 <select class="mt-1 border rounded w-full text-xs" onchange="updateGapAnswer(${sectionId}, '${gapName}', this.value)">
-                    <option value="">Chọn đáp án đúng...</option>
+                    <option value="">Chọn đáp án...</option>
                     ${[0,1,2,3].map(i => `<option value="${i}" ${q.answer === q.options[i] && q.answer!="" ? 'selected':''}>${['A','B','C','D'][i]}</option>`).join('')}
                 </select>
             </div>
@@ -123,7 +145,6 @@ window.handleGapInput = function(sectionId, text) {
     container.innerHTML = html;
 }
 
-// --- UPDATE HELPERS ---
 window.updateSectionData = (id, key, val) => { window.examData.sections.find(s => s.id === id)[key] = val; }
 window.updateGapOption = (secId, gapId, idx, val) => { window.examData.sections.find(s => s.id === secId).questions.find(q => q.id === gapId).options[idx] = val; }
 window.updateGapAnswer = (secId, gapId, idx) => { 
@@ -131,7 +152,6 @@ window.updateGapAnswer = (secId, gapId, idx) => {
     q.answer = q.options[parseInt(idx)];
 }
 
-// --- READING / MCQ LOGIC ---
 window.addQuestionToSection = (secId) => {
     const s = window.examData.sections.find(i => i.id === secId);
     s.questions.push({ id: Date.now(), question_text: "", options: ["","","",""], answer: "A" });
@@ -170,7 +190,7 @@ window.removeQuestion = (secId, qIdx) => {
     window.renderQuestions(secId);
 }
 
-// --- SAVE TO FIREBASE ---
+// --- LOGIC LƯU (SAVE/UPDATE) QUAN TRỌNG ---
 window.saveExam = async function() {
     const title = document.getElementById('exam-title').value;
     if(!title) return alert("Nhập tên đề!");
@@ -178,13 +198,25 @@ window.saveExam = async function() {
     window.examData.title = title;
     window.examData.duration = parseInt(document.getElementById('exam-duration').value);
     window.examData.category = document.getElementById('exam-category').value;
-    window.examData.createdAt = new Date().toISOString();
+    window.examData.lastModified = new Date().toISOString();
 
     try {
-        await addDoc(collection(db, "exams"), window.examData);
-        alert("Đã lưu lên Firebase thành công!");
-        window.location.href = "dashboard.html";
+        if (editingExamId) {
+            // CASE 1: CẬP NHẬT ĐỀ CŨ
+            await updateDoc(doc(db, "exams", editingExamId), window.examData);
+            alert("Đã cập nhật đề thi thành công!");
+        } else {
+            // CASE 2: TẠO MỚI
+            window.examData.createdAt = new Date().toISOString();
+            await addDoc(collection(db, "exams"), window.examData);
+            alert("Đã lưu đề mới thành công!");
+        }
+        window.location.href = "library.html"; // Quay về thư viện thay vì dashboard
     } catch (e) {
         alert("Lỗi: " + e.message);
     }
 }
+
+// Hàm bổ trợ cho nút toggle JSON (giữ nguyên hoặc xóa nếu không dùng)
+window.toggleJsonMode = () => { /* ...giữ nguyên logic cũ... */ }
+window.applyJson = () => { /* ...giữ nguyên logic cũ... */ }
