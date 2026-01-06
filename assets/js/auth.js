@@ -1,57 +1,67 @@
 // assets/js/auth.js
+import { db, collection, query, where, getDocs } from './firebase-init.js';
 
-function handleLogin(event) {
+// Gán vào window để HTML gọi được
+window.handleLogin = async function(event) {
     event.preventDefault();
 
     const usernameInput = document.getElementById('username').value.trim();
     const passwordInput = document.getElementById('password').value.trim();
+    const btn = event.target.querySelector('button');
+    
+    // Hiệu ứng loading
+    const originalText = btn.innerText;
+    btn.innerText = "Đang kiểm tra...";
+    btn.disabled = true;
 
-    // 1. Kiểm tra Admin (Tài khoản cứng)
-    if (usernameInput === 'admin' && passwordInput === 'dta@311710') {
-        const adminUser = { username: 'admin', fullname: 'Super Admin', role: 'admin' };
-        localStorage.setItem('currentUser', JSON.stringify(adminUser));
-        window.location.href = '../admin/dashboard.html';
-        return;
-    }
-
-    // 2. Kiểm tra User trong LocalStorage (Học viên & Writer)
-    const users = JSON.parse(localStorage.getItem('users') || "[]");
-    const foundUser = users.find(u => u.username === usernameInput);
-
-    if (foundUser) {
-        // Kiểm tra trạng thái khóa
-        if (foundUser.status === 'blocked') {
-            alert('Tài khoản này đã bị khóa. Vui lòng liên hệ Admin.');
+    try {
+        // 1. Check Admin cứng (như yêu cầu)
+        if (usernameInput === 'admin' && passwordInput === 'dta@311710') {
+            const adminUser = { username: 'admin', fullname: 'Super Admin', role: 'admin' };
+            localStorage.setItem('currentUser', JSON.stringify(adminUser));
+            window.location.href = '../admin/dashboard.html';
             return;
         }
 
-        // Kiểm tra mật khẩu mặc định
-        // (Lưu ý: Demo này chưa có tính năng đổi mật khẩu nên dùng pass mặc định)
-        let defaultPass = foundUser.role === 'writer' ? 'writer@123' : 'student@123';
+        // 2. Check User trên Firebase
+        const q = query(collection(db, "users"), where("username", "==", usernameInput));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            alert('Tên đăng nhập không tồn tại!');
+            btn.innerText = originalText; btn.disabled = false;
+            return;
+        }
+
+        const userDoc = querySnapshot.docs[0];
+        const userData = userDoc.data();
+
+        if (userData.status === 'blocked') {
+            alert('Tài khoản này đã bị khóa!');
+            btn.innerText = originalText; btn.disabled = false;
+            return;
+        }
+
+        // Check password (theo quy ước đề bài)
+        let defaultPass = userData.role === 'writer' ? 'writer@123' : 'student@123';
         
-        // Trong thực tế, user object nên có field 'password' riêng đã hash. 
-        // Ở đây ta so sánh với pass mặc định theo yêu cầu đề bài.
         if (passwordInput === defaultPass) {
-            localStorage.setItem('currentUser', JSON.stringify(foundUser));
+            // Lưu session vào localStorage để duy trì đăng nhập
+            localStorage.setItem('currentUser', JSON.stringify(userData));
             
-            if (foundUser.role === 'student') {
+            if (userData.role === 'student') {
                 window.location.href = '../student/dashboard.html';
             } else {
-                // Writer dùng chung Dashboard Admin nhưng bị ẩn menu (đã xử lý bên common.js)
                 window.location.href = '../admin/dashboard.html';
             }
-            return;
+        } else {
+            alert('Mật khẩu không đúng!');
+            btn.innerText = originalText; btn.disabled = false;
         }
-    }
 
-    // 3. Fallback cho Demo (nếu chưa có data trong localStorage)
-    if (passwordInput === 'student@123' && usernameInput === 'nguyenvana') {
-         // Case dự phòng để bạn test nhanh nếu lười tạo user
-         const demoUser = { username: 'nguyenvana', fullname: 'Nguyễn Văn A (Demo)', role: 'student' };
-         localStorage.setItem('currentUser', JSON.stringify(demoUser));
-         window.location.href = '../student/dashboard.html';
-         return;
+    } catch (error) {
+        console.error(error);
+        alert('Lỗi kết nối: ' + error.message);
+        btn.innerText = originalText; btn.disabled = false;
     }
-
-    alert('Tên đăng nhập hoặc mật khẩu không đúng!');
-}
+};
